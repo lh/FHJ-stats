@@ -1,0 +1,564 @@
+---
+title: "Publication graphs and analysis"
+author: "M Wickremasinghe, L Herbert"
+date: "16 August 2020"
+output:  
+#  rtf_document: default  neither rtf nor word formats 
+# are supported for eg fig.align and others. Can paste HTML into word if that is needed. 
+  html_document: default
+#  pdf_document: default 
+---
+
+```{r echo=FALSE}
+##################################################
+##################################################
+##   This file will only run if the             ##
+##   environment is correctly set. Go to        ##
+##   Tools|Global Option|Rmarkdown.             ##
+##   Set the drop down on "Evaluate chunks in   ##
+##   Directory" to Project. Then the paths      ##
+##   will work                                  ##
+##################################################
+##################################################
+```
+
+
+
+
+
+
+```{r setup, include=FALSE}
+
+library(knitr)
+
+knitr::opts_chunk$set(echo = FALSE)
+# load("HSJ.RData")
+knitr::opts_chunk$set(warning = FALSE, message = FALSE) 
+knitr::opts_chunk$set(cache =TRUE)
+```
+
+```{r}
+## ----knit-meta-can-run-away-with-memory----
+# invisible(knitr::knit_meta(clean=T))
+
+## ----read-in-libraries----
+# not needed - all in "publication.R"
+
+## ----read-in-prepared-data----
+data <- readRDS("data/data.RDS")
+manual_language_groups <- readRDS("data/mlg.RDS")
+
+## ----source--the-scripts----
+
+source("scripts/publication.R")
+
+source("scripts/additional_plots_and_analysis.R")
+
+
+```
+
+
+# Statistical notes
+
+Figures in the draft document are presented below - they each have the figure number in the image. Additional figures are included here and can easily be incorporated if needed. Also, additional tables of data and analysis are included here. These are labelled "info"
+
+Age distribution of the population is not normally distributed (nor is it expected to be) and so expressing age related data as means +/- SD seems wrong. They are presented for information. More useful probably are the box and whisker plots showing median and IQR; these were not included in the publication draft for space reasons. 
+
+
+
+# Figure 1
+
+
+## Figure 1
+```{r Figure-1, fig.align='center'}
+plot(Figure_1)
+```
+
+
+##into Figure 1 additional plot
+
+This is a Tukey style "box and whisker" plot showing median and IQR:
+
+upper hinge, 75% quantile
+
+lower hinge, 25% quantile
+
+upper whisker = largest observation less than or equal to upper hinge + 1.5 * IQR
+
+lower whisker = smallest observation greater than or equal to lower hinge - 1.5 * IQR
+
+
+```{r Figure-1-box-and-whisker, fig.align='center'}
+plot(Figure_1_box_and_whisker) 
+```
+
+
+### Mean and SD
+
+
+```{r info-figure-1-table, results = 'asis'}
+
+table <- allreg_summary_table %>%  
+  ungroup() %>% 
+  group_by(gender, registered) %>% 
+  gt(rowname_col = "aged") %>%
+  tab_header(
+    title = md("info: registration means, sd,  by age and gender"),
+    subtitle = "NB data not normally distributed so mean and SD don't mean much"
+  ) %>% 
+  tab_options(table.font.names = "serif",
+  table.font.size = pct(80),
+  heading.align = "left")
+
+table
+
+```
+
+
+
+
+## Table 1
+
+```{r Table-1, results = 'asis'}
+
+table <- CIE_percentage_table_age_and_gender %>%  
+    mutate(Registered_percentage = 
+             round(Registered_percentage, 1)) %>% 
+    rename(
+      "%" = Registered_percentage
+    ) %>% 
+  ungroup() %>% 
+  group_by(gender) %>% 
+  gt(rowname_col = "aged") %>%
+  tab_header(
+    title = md("Table 1: registration percentages by age and gender"),
+    subtitle = "Registered with CIE"
+  ) %>% 
+  tab_options(table.font.names = "serif",
+  table.font.size = pct(80),
+  heading.align = "left")
+
+ gtsave(table, "Publication_files/Table-1.png", expand = 20)
+
+
+```
+
+
+
+## Table 2
+
+```{r Table-2, results = 'asis'}
+table <-  CIE_percentage_table_age_and_gender_2_summary %>%  
+ mutate(aged=replace(aged, aged== "age_75_and_over", "75 and over"), 
+         aged=replace(aged, aged== "age_under_75", "less than 75")
+         ) %>% 
+  mutate(Registered_percentage = 
+    round(Registered_percentage, 1)) %>% 
+            rename("Gender" = gender,
+                   "Age" = aged,
+                   "Percentage Registered" = Registered_percentage
+                   ) %>% 
+  group_by(Gender) %>% 
+ gt(rowname_col = "Age") %>%
+  tab_header(
+    title = md("Table 2: older people's registration with CIE"),
+    subtitle = "Aged 75 and over compared to under 75"
+  ) %>% 
+  tab_options(table.font.names = "serif",
+  table.font.size = pct(80),
+  heading.align = "left")
+
+gtsave(table, "Publication_files/Table-2.png", expand = 20)
+
+
+
+```
+
+
+
+
+
+
+# Figure 2
+## Figure 2: Registration compared to the entire Cerner population.
+```{r Figure-2, fig.align='center'}
+plot(Figure_2)
+```
+
+## info 1: proportions of ethnicities engaged from all Cerner, compared to White 
+```{r info-1, echo = FALSE,  results = 'asis', caption = "Table 2b: additional data for Figure 2 in table form"}
+table <- registration_by_ethnicity_scaled_to_white_100 %>%  mutate(`Percentage registered compared to white = 100` = round(`Percentage registered compared to white = 100`, 1))%>% 
+  gt() %>%
+  tab_header(
+    title = md("Info 1: comparative proportions of ethnicities engaged from all Cerner"),
+    subtitle = ""
+  ) %>% 
+  tab_options(table.font.names = "serif",
+  table.font.size = pct(80),
+  heading.align = "left")
+
+table
+```
+
+
+# Figure 3
+
+## Figure 3a
+
+ 
+```{r Figure-3-a, echo = FALSE,  fig.align='center', caption = "Figure 3a: CIE registration and (overlaid) engagement versus all population by IMD Decile"}
+plot(Figure_3a_registered_and_engaged)
+
+``` 
+
+## info 3a: Index of Multiple Deprivation Decile Differences
+
+
+```{r info-3a, echo = FALSE,  results = 'asis', caption = "Table 3a: additional information for Figure 3a - the increase in liklihood of registration and engagement in the highest compared to lowest decile of the Index of Multiple Deprivation."}
+table <- `Index of Multiple Deprivation Decile Differences`%>%  mutate(`Lowest Decile` = round(`Lowest Decile`, 1),`Highest Decile` = round(`Highest Decile`, 1) , `Liklihood` = round(`Liklihood`, 1)) %>% 
+  rename("Status" = status) %>% 
+  gt() %>%
+  tab_header(
+    title = md("Info 3a: the increase in liklihood of registration and engagement in the highest, compared to lowest, decile of the Index of Multiple Deprivation."),
+    subtitle = ""
+  ) %>% 
+  tab_options(table.font.names = "serif",
+  table.font.size = pct(80),
+  heading.align = "left")
+
+table
+```
+
+
+## Figure 3b
+
+
+ 
+```{r Figure-3-b,  echo = FALSE, fig.align='center', caption = "Figure 3b: CIE registration and (overlaid) engagement versus all population by Health and Disability Decile"}
+plot(Figure_3b_registered_and_engaged)
+
+``` 
+
+## info 3b: Health and Disability Decile Differences
+
+
+```{r echo = FALSE,  results = 'asis', caption = "Table 3b: additional information for Figure 3b - the increase in liklihood of registration and engagement in the highest compared to lowest decile of Health and Disability Index. "}
+table <- `Health and Disability Decile Differences` %>%  mutate(`Lowest Decile` = round(`Lowest Decile`, 1),`Highest Decile` = round(`Highest Decile`, 1) , `Liklihood` = round(`Liklihood`, 1)) %>% 
+  rename("Status" = status) %>% 
+  gt() %>%
+  tab_header(
+    title = md("Info 3b: the increase in liklihood of registration and engagement in the highest, compared to lowest, decile of the Health and Disability Index"),
+    subtitle = ""
+  ) %>% 
+  tab_options(table.font.names = "serif",
+  table.font.size = pct(80),
+  heading.align = "left")
+
+table
+```
+
+
+## Figure 3c
+ 
+
+ 
+```{r Figure-3-c, echo = FALSE,  fig.align='center', caption = "Figure 3c: CIE registration and (overlaid) engagement versus all population by Income Decile"}
+plot(Figure_3c_registered_and_engaged)
+
+``` 
+
+## info 3c: Income Decile Differences
+
+
+```{r info-3c,  echo = FALSE,  results = 'asis', caption = "Table 3c: additional information for Figure 3c - the increase in liklihood of registration and engagement in the highest compared to lowest decile of Income. "}
+table <- `Income Decile Differences`%>%  mutate(`Lowest Decile` = round(`Lowest Decile`, 1),`Highest Decile` = round(`Highest Decile`, 1) , `Liklihood` = round(`Liklihood`, 1)) %>% 
+  rename("Status" = status) %>% 
+  gt() %>%
+  tab_header(
+    title = md("Info 3c: the increase in liklihood of registration and engagement in the highest, compared to lowest, decile of Income"),
+    subtitle = ""
+  ) %>% 
+  tab_options(table.font.names = "serif",
+  table.font.size = pct(80),
+  heading.align = "left")
+
+table
+```
+
+
+
+# Figure 4
+## Figure 4a
+```{r Figure-4-a, fig.align='center', caption = "Figure 4a: Languages recorded on Cerner"}
+plot(Figure_4a)
+
+```
+
+## info 4a: top 5 languages and percentages in Cerner group
+```{r info-4a, results = 'asis', caption = "Table 4a: top 5 languages and percentages in Cerner group"}
+table <- Figure_4a_data %>% 
+  mutate("Language" = language, "Count" = language_count, "%" = round(language_percent, digits = 1)) %>% select(Language, Count, `%`) %>% 
+  gt() %>%
+  tab_header(
+    title = md("Info 4a: top 5 languages and percentages in Cerner group"),
+    subtitle = ""
+  ) %>% 
+  tab_options(table.font.names = "serif",
+  table.font.size = pct(80),
+  heading.align = "left")
+
+table
+```
+
+
+## Figure 4b
+```{r Figure-4-b, , fig.align='center', caption = "Figure 4b:  Languages recorded for people registered on CIE"}
+plot(Figure_4b)
+
+```
+
+
+## info 4b: top 5 languages and percentages in Cerner group 
+```{r info-4-b, results = 'asis'}
+table <- Figure_4b_data %>% 
+  mutate("Language" = language, "Count" = language_count, "%" = round(language_percent, digits = 1)) %>% 
+  select(Language, Count, `%`) %>% 
+  gt() %>%
+  tab_header(
+    title = md("Info 4b: top 5 languages and percentages in CIE group"),
+    subtitle = ""
+  ) %>% 
+  tab_options(table.font.names = "serif",
+  table.font.size = pct(80),
+  heading.align = "left")
+
+table
+```
+
+## Figure 4c
+```{r Figure-4-c, , fig.align='center', caption = "Figure 4c:  Log odds of being registered, by language and language group"}
+plot(Figure_4c)
+
+```
+
+# Figure 5
+```{r Figure-5, fig.align='center', caption = "Figure 5 as in paper, minor modification to title"}
+plot(Figure_5)
+
+```
+
+# Figure 6
+## Figure 6a
+```{r Figure-6-a, fig.align='center', caption = "Figure 6a modified - original showed compared to Cerner, not CIE"}
+plot(Figure_6a)
+
+```
+
+## Info 6a
+```{r info-6-a, echo = FALSE, results = 'asis'}
+table <- Figure_6a_data %>%  
+  mutate(`Percentage engaged compared to white = 100` = 
+  round(`Percentage engaged compared to white = 100`, 1)) %>% 
+  gt() %>%
+  tab_header(
+    title = md("Info 6a: additional data for Figure 6a in table form"),
+    subtitle = ""
+  ) %>% 
+  tab_options(table.font.names = "serif",
+  table.font.size = pct(80),
+  heading.align = "left")
+
+table 
+```
+
+## Figure 6b: Engagement compared to the the whole Cerner population.
+```{r Figure-6-b, fig.align='center', caption = "Figure 2 as in paper"}
+plot(Figure_6b)
+
+```
+
+## Figure 6c
+```{r Figure-6-c, fig.align='center', caption = "Figure 6c"}
+plot(Figure_6c)
+
+```
+
+## info-6c - additional data for Figure 6c in table form
+```{r info-6-c, echo = FALSE, results = 'asis', caption = "Summary data for Figure 6c in table form"}
+table <- Figure_6b_data %>%  mutate(
+  mean = round(mean, 1),
+   skewness = round(skewness, 2),
+   kurtosis = round(kurtosis, 2)
+  ) %>% 
+  gt() %>%
+  tab_header(
+    title = md("Info 6c: additional data for Figure 6c in table form"),
+    subtitle = ""
+  ) %>% 
+  tab_options(table.font.names = "serif",
+  table.font.size = pct(80),
+  heading.align = "left")
+
+table
+
+```
+
+## Figure 6d
+## Figure 6d: answering of questionnaires compared to the whole CIE group, by ethnicity.
+```{r Figure-6-d, fig.align='center', caption = "Figure 6d (was 6c in paper)"}
+plot(Figure_6d)
+```
+
+## info 6d - additional data for Figure 6d in table form
+```{r info-6d, echo = FALSE,  results = 'asis'}
+table <- portion_of_CIE_answering_q_by_ethnicity_scaled_to_white_100 %>%  mutate(`Percentage doing questionnaire compared to white = 100` = round(`Percentage did questionnaire if white = 100`, 1)) %>% 
+  select(Ethnicity, `Percentage doing questionnaire compared to white = 100` ) %>% 
+  gt() %>%
+  tab_header(
+    title = md("Info 6d: additional data for Figure 6d in table form"),
+    subtitle = ""
+  ) %>% 
+  tab_options(table.font.names = "serif",
+  table.font.size = pct(80),
+  heading.align = "left")
+
+table
+
+```
+
+# Figure 7
+## Figure 7a
+```{r, Figure-7a, fig.align='center', }
+plot(Figure_7_by_gender)
+```
+
+## info 7a - additional data for Figure 7a in table form
+```{r info-7a, echo = FALSE,  results = 'asis', caption = "Table 7a: ILD patients' engagement compared to the rest of the CIE group"}
+table <- ILD_stats_engagement %>%  mutate(Engaged = Engaged_with_CIE, `Not engaged` = Not_engaged_with_CIE, Percentage = round(Engaged_Portion, 1)) %>% select(-Engaged_with_CIE, -Not_engaged_with_CIE, -Engaged_Portion) %>% 
+  gt() %>%
+  tab_header(
+    title = md("Info 7a: additional data for Figure 7a in table form"),
+    subtitle = ""
+  ) %>% 
+  tab_options(table.font.names = "serif",
+  table.font.size = pct(80),
+  heading.align = "left")
+
+table
+```
+
+## info 7ai - 7aiii - additional data for Figure 7a in table form
+```{r info-7a-i, echo = FALSE, results = 'asis', caption = "Summary data for Figure 7a in table form"}
+table <- Figure_7b_data %>%  mutate(
+  mean = round(mean, 1),
+   skewness = round(skewness, 2),
+   kurtosis = round(kurtosis, 2)
+  ) %>% 
+  ungroup() %>% 
+  group_by(gender) %>% 
+  gt(rowname_col = "Is ILD patient") %>%
+  tab_header(
+    title = md("Info 7ai: additional data for Figure 7a in table form"),
+    subtitle = ""
+  ) %>% 
+  tab_options(table.font.names = "serif",
+  table.font.size = pct(80),
+  heading.align = "left")
+
+table
+
+```
+
+```{r info-7a-ii, echo = FALSE, results = 'asis', caption = "Summary data for Figure 7b in table form"}
+table <- Figure_7b_data_no_gender %>%  mutate(
+  mean = round(mean, 1),
+   skewness = round(skewness, 2),
+   kurtosis = round(kurtosis, 2)
+  ) %>% 
+  gt(rowname_col = "Is ILD patient") %>%
+  tab_header(
+    title = md("info-7-a-ii,: ILD patient age details"),
+    subtitle = ""
+  ) %>% 
+  tab_options(table.font.names = "serif",
+  table.font.size = pct(80),
+  heading.align = "left")
+
+table
+
+```
+
+```{r info-7-a-iii, echo = FALSE,  results = 'asis', caption = "Table 7c: ILD patients' in answering COVID-19 questionnaire compared to the rest of the CIE group"}
+table <- ILD_COVID_questionnaire  %>% 
+  gt(rowname_col = "Is ILD patient") %>% 
+  tab_header(
+    title = md("Table 7c: Liklihoods of answering COVID questionnaires, by ILD status"),
+    subtitle = ""
+  ) %>% 
+  tab_options(table.font.names = "serif",
+  table.font.size = pct(80),
+  heading.align = "left")
+
+table
+```
+
+## info 7a-iiii - additional data **NEW**
+```{r info-7a-iiii, echo = FALSE,  results = 'asis'}
+table <- ILD_stats_questionnaire  %>% 
+  gt(rowname_col = "Is ILD patient") %>% 
+  tab_header(
+    title = md("info 7aiiii: Liklihoods of answering any questionnaire, by ILD status"),
+    subtitle = ""
+  ) %>% 
+  tab_options(table.font.names = "serif",
+  table.font.size = pct(80),
+  heading.align = "left")
+
+table
+```
+
+## Figure 7b: ILD patients compared to the registered population.
+```{r Figure-7-b, fig.align='center'}
+plot(Figure_8)
+```
+
+## Table 3: ILD registration numbers by ethnicity, compared to registered population 
+```{r Table-3, results = 'asis'}
+table <- Figure_8_data %>% 
+  mutate("ILD" = Known_ILD_Patient, 
+  "Not ILD" = Not_a_known_ILD_Patient,
+  "%" = round(ILD_Portion, digits = 2), 
+  "Ethnicity" = EthnicCat_r) %>% 
+  select(Ethnicity,  `Not ILD`, ILD, "%") %>% 
+  gt() %>%
+  tab_header(
+    title = md("Table 3: ILD registration numbers by ethnicity, compared to registered population"),
+    subtitle = ""
+  ) %>% 
+  tab_options(table.font.names = "serif",
+  table.font.size = pct(80),
+  heading.align = "left")
+
+gtsave(table, "Publication_files/Table-3.png", expand = 20)
+```
+
+
+## Figure 7c: ILD registration compared to non-ILD registration.
+```{r Figure-7-c, fig.align='center'}
+plot(Ethnicity_ILD_Reg)
+```
+
+
+The total Cerner patients = `r xTotal`
+
+The total CIE patients = `r xRegistered_with_CIE `
+
+The total ILD patients = `r xILD`
+
+The total ILD registered CIE patients = `r xRegILD`
+
+```{r}
+## ----forcing-memory-release----
+#invisible(gc())
+```
+
