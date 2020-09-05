@@ -30,7 +30,7 @@ data <- left_join(data, post_codes_language, by =  "postcode_sector")
 
 data <- left_join(data, pc_lang)
 
-data <- data %>% filter(age < 115)  # removes about a dozen very old cases with no other data present - possible test cases in the data
+data <- data %>% filter(age < 115)  # removes about a dozen apparently very old subjects with no other data present - possible test cases in the data
 
 rm(pc_lang) # not needed again, and large
 

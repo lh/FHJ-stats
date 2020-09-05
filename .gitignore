@@ -56,3 +56,6 @@ vignettes/*.pdf
 *.xlsx
 *.html
 *.md
+*.csv
+*.RDS
+.Rproj.user

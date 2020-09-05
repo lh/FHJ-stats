@@ -45,7 +45,9 @@ library(devtools)
 library(visdat)
 library(hexbin)
 library(scales)
+library(conflicted)
 
+conflict_prefer("filter", "dplyr")
 ##---- cleanup
 
 # rm(list = ls(pattern = "^t.*_", all.names = TRUE))   # clean the workspace of temporary files

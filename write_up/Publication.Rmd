@@ -1,7 +1,7 @@
 ---
 title: "Publication graphs and analysis"
 author: "M Wickremasinghe, L Herbert"
-date: "16 August 2020"
+date: "1 September 2020"
 output:  
 #  rtf_document: default  neither rtf nor word formats 
 # are supported for eg fig.align and others. Can paste HTML into word if that is needed. 
@@ -35,26 +35,33 @@ knitr::opts_chunk$set(echo = FALSE)
 # load("HSJ.RData")
 knitr::opts_chunk$set(warning = FALSE, message = FALSE) 
 knitr::opts_chunk$set(cache =TRUE)
+
+library(conflicted)
+
+conflict_prefer("filter", "dplyr")
 ```
 
-```{r}
+```{r }
 ## ----knit-meta-can-run-away-with-memory----
 # invisible(knitr::knit_meta(clean=T))
 
-## ----source--all-the-scripts----
-source("scripts/import_dataset_publication.R") 
+## ----read-in-libraries----
+# not needed - all in "publication.R"
 
-source("scripts/import_postcode_data.R")  
+## ----read-in-prepared-data----
+data <- readRDS("data/data.RDS")
+manual_language_groups <- readRDS("data/mlg.RDS")
 
-source("scripts/language_publication.R") 
 
-source("scripts/import_tidy_nomix_language.R")
-
-source("scripts/prepare_for_publication.R") 
+## ----source--the-scripts----
 
 source("scripts/publication.R")
+library(conflicted)
+library(coin)
+library(ggpubr)
+library(rstatix)
 
-source("scripts/additional_plots_and_analysis.R")
+
 
 ```
 
@@ -62,6 +69,14 @@ source("scripts/additional_plots_and_analysis.R")
 # Statistical notes
 
 Figures in the draft document are presented below - they each have the figure number in the image. Additional figures are included here and can easily be incorporated if needed. Also, additional tables of data and analysis are included here. These are labelled "info"
+
+### Test for normal ditribution
+
+It is seems from the histogram that the age is not normally distributed. Below is a QQ plot (it will approximate a straight line if normally distributed)
+
+```{r qqplot_of_age, echo=FALSE, fig.cap="INFO: qqplot of age", out.width = '100%'}
+knitr::include_graphics("./qqplot.png")
+```
 
 Age distribution of the population is not normally distributed (nor is it expected to be) and so expressing age related data as means +/- SD seems wrong. They are presented for information. More useful probably are the box and whisker plots showing median and IQR; these were not included in the publication draft for space reasons. 
 
@@ -76,7 +91,7 @@ plot(Figure_1)
 ```
 
 
-##into Figure 1 additional plot
+## info Figure 1 additional plot
 
 This is a Tukey style "box and whisker" plot showing median and IQR:
 
@@ -88,17 +103,15 @@ upper whisker = largest observation less than or equal to upper hinge + 1.5 * IQ
 
 lower whisker = smallest observation greater than or equal to lower hinge - 1.5 * IQR
 
-
-```{r Figure-1-box-and-whisker, fig.align='center'}
-plot(Figure_1_box_and_whisker) 
+```{r pressure, echo=FALSE, fig.cap="A caption", out.width = '100%'}
+knitr::include_graphics("./Figure_1_box_and_whisker.png")
 ```
 
-
-### Mean and SD
+### info: Mean and SD
 
 
 ```{r info-figure-1-table, results = 'asis'}
-
+allreg_summary_table <- readRDS("data/allreg_summary_table.RDS")
 table <- allreg_summary_table %>%  
   ungroup() %>% 
   group_by(gender, registered) %>% 
@@ -115,7 +128,60 @@ table
 
 ```
 
+Better summary statistics:
 
+```{r info-figure-1-table-not-normal, results = 'asis'}
+allreg_summary_table_not_normal <- data %>% 
+  filter(gender == "male" | gender == "female") %>% 
+  group_by(registered, gender) %>% 
+  get_summary_stats(age, type = "median_iqr")
+
+table <- allreg_summary_table_not_normal %>%  
+  ungroup() %>% 
+  group_by(gender, registered) %>% 
+  gt(rowname_col = "variable") %>%
+  tab_header(
+    title = md("info: registration median, IQR,  by age and gender"),
+    subtitle = ""
+  ) %>% 
+  tab_options(table.font.names = "serif",
+  table.font.size = pct(80),
+  heading.align = "left")
+
+table
+
+```
+
+### Wilcoxon test (for parametric, non-normal data)
+
+For males:
+```{r}
+
+male_reg_wilcoxon <- readRDS("data/male_reg_wilcoxon.RDS")
+male_reg_wilcoxon
+
+```
+
+
+```{r male_reg_wilcoxon_bxp, echo=FALSE, fig.cap="male_reg_wilcoxon_bxp", out.width = '100%'}
+knitr::include_graphics("./male_reg_wilcoxon_bxp.png")
+```
+
+For females:
+
+
+```{r}
+
+female_reg_wilcoxon <- readRDS("data/female_reg_wilcoxon.RDS")
+female_reg_wilcoxon
+
+
+```
+
+
+```{r female_reg_wilcoxon_bxp, echo=FALSE, fig.cap="female_reg_wilcoxon_bxp", out.width = '100%'}
+knitr::include_graphics("./female_reg_wilcoxon_bxp.png")
+```
 
 
 ## Table 1
